@@ -1,7 +1,7 @@
 import AuroraText from '@/shared/components/ui/magicui/AuroraText';
 
 /** Toggle between aurora gradient heading (true) and original heading style (false) */
-const USE_AURORA_MAIN_MENU_HEADING = true;
+const USE_AURORA_MAIN_MENU_HEADING = false;
 
 const Banner = () => {
   return (

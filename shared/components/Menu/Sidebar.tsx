@@ -104,7 +104,7 @@ const baseExperimentsSection: NavSection = {
 /** Toggle between ActionButton style (true) and simple background style (false) for active nav items */
 const USE_ACTION_BUTTON_STYLE = true;
 /** Toggle between aurora gradient heading (true) and original heading style (false) */
-const USE_AURORA_SIDEBAR_HEADING = true;
+const USE_AURORA_SIDEBAR_HEADING = false;
 
 // ============================================================================
 // Subcomponents
