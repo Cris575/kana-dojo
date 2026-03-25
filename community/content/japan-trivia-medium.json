@@ -271,11 +271,11 @@
   "question": "Which dish is a Japanese hot pot with thinly sliced beef?",
   "difficulty": "medium",
   "answers": [
-    "Sukiyaki",
-    "Okonomiyaki",
-    "Takoyaki",
-    "Chankonabe"
-  ],
+      "Sukiyaki",
+      "Okonomiyaki",
+      "Takoyaki",
+      "Chankonabe"
+    ],
     "correctIndex": 0
-  },
+  }
 ]
