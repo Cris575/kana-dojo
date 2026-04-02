@@ -232,6 +232,9 @@ const KanaTilesMode = ({
   const [placedTileIds, setPlacedTileIds] = useState<number[]>([]);
   const [isChecking, setIsChecking] = useState(false);
   const [isCelebrating, setIsCelebrating] = useState(false);
+  const hasInitializedResetRef = useRef(false);
+  const previousWordLengthRef = useRef(wordLength);
+  const skipNextWordLengthResetRef = useRef(false);
 
   const resetGame = useCallback(() => {
     const newWord = generateWord();
@@ -247,6 +250,22 @@ const KanaTilesMode = ({
   // Note: speedStopwatch deliberately excluded - only calling methods
 
   useEffect(() => {
+    if (!hasInitializedResetRef.current) {
+      hasInitializedResetRef.current = true;
+      previousWordLengthRef.current = wordLength;
+      resetGame();
+      return;
+    }
+
+    const didWordLengthChange = previousWordLengthRef.current !== wordLength;
+    previousWordLengthRef.current = wordLength;
+
+    if (didWordLengthChange && skipNextWordLengthResetRef.current) {
+      skipNextWordLengthResetRef.current = false;
+      return;
+    }
+
+    skipNextWordLengthResetRef.current = false;
     resetGame();
   }, [isReverse, wordLength, resetGame]);
 
@@ -345,8 +364,10 @@ const KanaTilesMode = ({
       }
 
       if (!isWordLengthControlled) {
+        skipNextWordLengthResetRef.current = true;
         recordTilesProgressionWrong();
       }
+
       externalOnWrong?.();
       logAttempt({
         questionId: wordData.wordChars.join(''),

@@ -14,7 +14,7 @@ import GameModes from '@/shared/components/Menu/GameModes';
 import { cn } from '@/shared/lib/utils';
 
 const TRAINING_ACTION_CLASSIC_FLOAT_CLASSES =
-  'motion-safe:animate-float [--float-distance:-3.5px] delay-200ms';
+  'motion-safe:animate-float [--float-distance:-3px] delay-200ms';
 
 interface ITopBarProps {
   currentDojo: string;
