@@ -19,6 +19,10 @@ import {
 
 type AnimState = 'idle' | 'exploding' | 'hidden' | 'fading-in';
 
+const EXPLOSION_START_DELAY_MS = 300;
+const EXPLOSION_HIDDEN_DURATION_MS = 600;
+const EXPLOSION_FADE_IN_DURATION_MS = 500;
+
 const ExplodingAnswerTile = memo(
   ({
     id,
@@ -85,11 +89,11 @@ const ExplodingAnswerTile = memo(
                     window.setTimeout(() => {
                       setAnimState('idle');
                       isAnimating.current = false;
-                    }, 500),
+                    }, EXPLOSION_FADE_IN_DURATION_MS),
                   );
-                }, 1500),
+                }, EXPLOSION_HIDDEN_DURATION_MS),
               );
-            }, 300),
+            }, EXPLOSION_START_DELAY_MS),
           );
         }, explodeDelayMs),
       );
@@ -102,7 +106,7 @@ const ExplodingAnswerTile = memo(
         case 'hidden':
           return { opacity: 0 };
         case 'fading-in':
-          return { animation: 'fadeIn 500ms ease-in forwards' };
+          return { animation: `fadeIn ${EXPLOSION_FADE_IN_DURATION_MS}ms ease-in forwards` };
         default:
           return {};
       }
