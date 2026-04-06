@@ -1,17 +1,33 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Star, Flame } from 'lucide-react';
+import { Random } from 'random-js';
+import { Flame } from 'lucide-react';
 import { useHasFinePointer } from '@/shared/hooks/generic/useHasFinePointer';
 import { useClick } from '@/shared/hooks/generic/useAudio';
 import { cn } from '@/shared/lib/utils';
-import { getRandomMilestoneMessage } from '@/shared/lib/game/streakMilestones';
+import { getRandomKanjiStyles } from '@/shared/lib/decorations/decorationUtils';
+import {
+  generateRandomPositions,
+  getResponsiveCharSize,
+  getExclusionZone,
+  type Position,
+} from '@/shared/lib/decorations/positioningUtils';
+import FloatingKanji from './FloatingKanji';
 
 interface StreakMilestoneOverlayProps {
   milestone: number | null;
   onDismiss: () => void;
+}
+
+interface FloatingKanjiData {
+  char: string;
+  color: string;
+  fontClass: string;
+  position: Position;
+  delay: number;
 }
 
 const layerVariants = {
@@ -65,10 +81,64 @@ export default function StreakMilestoneOverlay({
 }: StreakMilestoneOverlayProps) {
   const hasFinePointer = useHasFinePointer();
   const { playClick } = useClick();
-  const message = useMemo(() => {
-    if (!milestone) return '';
+  const [floatingKanji, setFloatingKanji] = useState<FloatingKanjiData[]>([]);
+  const [charSize, setCharSize] = useState<'sm' | 'md' | 'lg'>('lg');
 
-    return getRandomMilestoneMessage(milestone);
+  // Generate floating kanji positions and styles
+  useEffect(() => {
+    if (!milestone) {
+      return;
+    }
+
+    const generateFloatingKanji = async () => {
+      // Get viewport dimensions
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Get responsive character size
+      const responsiveCharSize = getResponsiveCharSize(viewportWidth);
+
+      // Set size class for rendering
+      if (viewportWidth < 768) {
+        setCharSize('sm');
+      } else if (viewportWidth < 1024) {
+        setCharSize('md');
+      } else {
+        setCharSize('lg');
+      }
+
+      // Get exclusion zone (central content area)
+      const exclusionZone = getExclusionZone(viewportWidth, viewportHeight);
+
+      // Create seeded random number generator for consistent results
+      const rng = new Random();
+
+      // Generate random positions
+      const positions = generateRandomPositions(
+        milestone,
+        viewportWidth,
+        viewportHeight,
+        responsiveCharSize,
+        exclusionZone,
+        rng,
+      );
+
+      // Load kanji styles
+      const styles = await getRandomKanjiStyles(milestone);
+
+      // Combine styles with positions and random delays
+      const kanjiData: FloatingKanjiData[] = styles.map((style, index) => ({
+        char: style.char,
+        color: style.color,
+        fontClass: style.fontClass,
+        position: positions[index],
+        delay: rng.real(0, 3), // Random delay 0-3 seconds for float animation
+      }));
+
+      setFloatingKanji(kanjiData);
+    };
+
+    generateFloatingKanji();
   }, [milestone]);
 
   useEffect(() => {
@@ -103,7 +173,7 @@ export default function StreakMilestoneOverlay({
       window.removeEventListener('keyup', handleKeyUp, true);
       window.removeEventListener('keypress', handleKeyPress, true);
     };
-  }, [milestone, onDismiss]);
+  }, [milestone, onDismiss, playClick]);
 
   const handleDismiss = () => {
     playClick();
@@ -143,12 +213,33 @@ export default function StreakMilestoneOverlay({
           initial='hidden'
           animate='visible'
           exit='exit'
-          className='fixed inset-0 z-[70] flex h-full w-full items-center justify-center bg-(--background-color)'
+          className='fixed inset-0 z-70 flex h-full w-full items-center justify-center bg-(--background-color)'
           onClick={handleDismiss}
           role='dialog'
           aria-modal='true'
           aria-label={`${milestone} in a row`}
         >
+          {/* Floating Kanji Background */}
+          <motion.div
+            initial='hidden'
+            animate='visible'
+            className='fixed inset-0'
+            style={{ zIndex: -10 }}
+          >
+            {floatingKanji.map((kanji, index) => (
+              <FloatingKanji
+                key={`kanji-${index}`}
+                char={kanji.char}
+                color={kanji.color}
+                fontClass={kanji.fontClass}
+                position={kanji.position}
+                delay={kanji.delay}
+                size={charSize}
+              />
+            ))}
+          </motion.div>
+
+          {/* Main Content */}
           <motion.div
             variants={contentVariants}
             initial='hidden'

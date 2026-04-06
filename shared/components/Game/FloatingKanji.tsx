@@ -1,0 +1,70 @@
+'use client';
+
+import { memo } from 'react';
+import { motion } from 'framer-motion';
+import { cn } from '@/shared/lib/utils';
+
+interface FloatingKanjiProps {
+  char: string;
+  color: string;
+  fontClass: string;
+  position: { x: number; y: number };
+  delay: number;
+  size: 'sm' | 'md' | 'lg';
+}
+
+// Animation variants for smooth fade-in
+const kanjiVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.8,
+  },
+  visible: {
+    opacity: 0.9,
+    scale: 1,
+    transition: {
+      duration: 0.6,
+      ease: [0.4, 0, 0.2, 1] as const, // Smooth cubic-bezier easing
+    },
+  },
+};
+
+const FloatingKanji = memo(
+  ({ char, color, fontClass, position, delay, size }: FloatingKanjiProps) => {
+    // Map size prop to Tailwind classes
+    const sizeClass = {
+      sm: 'text-2xl', // 24px - mobile
+      md: 'text-3xl', // 30px - tablet
+      lg: 'text-4xl', // 36px - desktop
+    }[size];
+
+    return (
+      <motion.span
+        variants={kanjiVariants}
+        className={cn(
+          'pointer-events-none fixed inline-flex items-center justify-center select-none',
+          sizeClass,
+          fontClass,
+          'motion-safe:animate-float',
+        )}
+        aria-hidden='true'
+        style={{
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+          color: color,
+          zIndex: -10,
+          transform: 'translate(-50%, -50%)', // Center the character on the position
+          animationDelay: `${delay}s`,
+          // @ts-expect-error - CSS variable for float animation
+          '--float-distance': '-6px',
+        }}
+      >
+        {char}
+      </motion.span>
+    );
+  },
+);
+
+FloatingKanji.displayName = 'FloatingKanji';
+
+export default FloatingKanji;
