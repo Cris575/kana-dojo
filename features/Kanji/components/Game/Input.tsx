@@ -48,7 +48,6 @@ const KanjiInputGame = ({
   );
 
   const {
-    score,
     setScore,
     incrementKanjiCorrect,
     recordAnswerTime,
@@ -61,7 +60,6 @@ const KanjiInputGame = ({
     incrementCharacterScore,
   } = useStatsStore(
     useShallow(state => ({
-      score: state.score,
       setScore: state.setScore,
       incrementKanjiCorrect: state.incrementKanjiCorrect,
       recordAnswerTime: state.recordAnswerTime,
@@ -212,14 +210,18 @@ const KanjiInputGame = ({
     }
   };
 
+  const normalizeAnswer = (value: string): string => value.trim().toLowerCase();
+
   const isInputCorrect = (input: string): boolean => {
+    const normalizedInput = normalizeAnswer(input);
+
     if (!isReverse) {
       return (
         Array.isArray(targetChar) &&
-        targetChar.includes(input.trim().toLowerCase())
+        targetChar.some(answer => normalizeAnswer(answer) === normalizedInput)
       );
     } else {
-      return input.trim().toLowerCase() === targetChar;
+      return normalizedInput === normalizeAnswer(targetChar);
     }
   };
 
@@ -250,7 +252,7 @@ const KanjiInputGame = ({
     incrementCharacterScore(canonicalKanjiChar, 'correct');
     incrementCorrectAnswers();
     void recordKanjiProgress(canonicalKanjiChar);
-    setScore(score + 1);
+    setScore(useStatsStore.getState().score + 1);
 
     triggerCrazyMode();
     adaptiveSelector.updateCharacterWeight(correctChar, true);
@@ -300,10 +302,11 @@ const KanjiInputGame = ({
 
     incrementCharacterScore(canonicalKanjiChar, 'wrong');
     incrementWrongAnswers();
-    if (score - 1 < 0) {
+    const nextScore = useStatsStore.getState().score - 1;
+    if (nextScore < 0) {
       setScore(0);
     } else {
-      setScore(score - 1);
+      setScore(nextScore);
     }
     triggerCrazyMode();
     adaptiveSelector.updateCharacterWeight(correctChar, false);
@@ -349,14 +352,12 @@ const KanjiInputGame = ({
     startTimer();
   };
 
-  const gameMode = isReverse ? 'reverse input' : 'input';
   const displayCharLang = isReverse ? 'en' : 'ja';
   const inputLang = isReverse ? 'ja' : 'en';
   const textSize = isReverse ? 'text-6xl sm:text-8xl' : 'text-8xl sm:text-9xl';
   const gapSize = isReverse ? 'gap-6 sm:gap-10' : 'gap-4 sm:gap-10';
   const canCheck = inputValue.trim().length > 0 && bottomBarState !== 'correct';
   const showContinue = bottomBarState === 'correct';
-  const showFeedback = bottomBarState !== 'check';
   const clearWrongFeedback = () => {
     if (bottomBarState === 'wrong') {
       setClearWrongFeedbackSignal(prev => prev + 1);

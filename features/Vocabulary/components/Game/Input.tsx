@@ -47,7 +47,7 @@ const VocabInputGame = ({
   const recordVocabularyProgress = useSetProgressStore(
     state => state.recordVocabularyProgress,
   );
-  const { score, setScore } = useStatsDisplay();
+  const { setScore } = useStatsDisplay();
   const gameStats = useGameStats();
 
   const isGlassMode = useThemePreferences().isGlassMode;
@@ -210,14 +210,17 @@ const VocabInputGame = ({
     return null;
   }
 
+  const normalizeAnswer = (value: string): string => value.trim().toLowerCase();
+
   const isInputCorrect = (input: string): boolean => {
     if (quizType === 'meaning') {
       if (!isReverse) {
         return (
-          Array.isArray(targetChar) && targetChar.includes(input.toLowerCase())
+          Array.isArray(targetChar) &&
+          targetChar.some(answer => normalizeAnswer(answer) === normalizeAnswer(input))
         );
       } else {
-        return input === targetChar;
+        return normalizeAnswer(input) === normalizeAnswer(targetChar);
       }
     } else {
       const targetReading = typeof targetChar === 'string' ? targetChar : '';
@@ -251,7 +254,7 @@ const VocabInputGame = ({
       timeTaken: answerTimeMs,
     });
     void recordVocabularyProgress(correctChar, quizType);
-    setScore(score + 1);
+    setScore(useStatsStore.getState().score + 1);
 
     triggerCrazyMode();
     adaptiveSelector.updateCharacterWeight(correctChar, true);
@@ -300,10 +303,11 @@ const VocabInputGame = ({
       inputValue.trim(),
       correctAnswer,
     );
-    if (score - 1 < 0) {
+    const nextScore = useStatsStore.getState().score - 1;
+    if (nextScore < 0) {
       setScore(0);
     } else {
-      setScore(score - 1);
+      setScore(nextScore);
     }
     triggerCrazyMode();
     adaptiveSelector.updateCharacterWeight(correctChar, false);
@@ -380,7 +384,7 @@ const VocabInputGame = ({
             <span className='mb-2 text-sm text-(--secondary-color)'>
               {quizType === 'meaning'
                 ? isReverse
-                  ? 'What is the meaning?'
+                  ? 'What is the word?'
                   : 'What is the meaning?'
                 : 'What is the reading?'}
             </span>
